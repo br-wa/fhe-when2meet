@@ -17,11 +17,18 @@ fn function_fhe (a_meet: &FheBool, b_meet: &FheBool, a_free: &Vec<FheBool>, b_fr
     for (u, v) in izip!(a_free, b_free) {
         output.push(&meet & &(u & v))
     }
-    output
+    let mut true_output = Vec::new();
+    true_output.push(output[0].clone());
+    let mut visited = output[0].clone();
+    for i in 1..output.len() {
+        true_output.push(&(!&visited) & &output[i]);
+        visited = &visited | &output[i];
+    }
+    true_output
 }
 
 fn main() {
-    set_parameter_set(ParameterSelector::NonInteractiveLTE4Party);
+    set_parameter_set(ParameterSelector::NonInteractiveLTE2Party);
 
     // set application's common reference seed
     let mut seed = [0u8; 32];
@@ -46,20 +53,11 @@ fn main() {
     let c1_free_len = c1_free.len();
     let c1_meet_len = c1_meet.len();
 
-    let c2_free: Vec<bool> = vec![true, true, false]; 
-    let c2_meet: Vec<bool> = vec![true, true];
-
-    let c2_free_len = c2_free.len();
-    let c2_meet_len = c2_meet.len();
-
     let c0_free_enc = Encryptor::<_, NonInteractiveBatchedFheBools<Vec<Vec<u64>>>>::encrypt(&cks[0], c0_free.as_slice());
     let c0_meet_enc = Encryptor::<_, NonInteractiveBatchedFheBools<Vec<Vec<u64>>>>::encrypt(&cks[0], c0_meet.as_slice());
 
     let c1_free_enc = Encryptor::<_, NonInteractiveBatchedFheBools<Vec<Vec<u64>>>>::encrypt(&cks[1], c1_free.as_slice());
     let c1_meet_enc = Encryptor::<_, NonInteractiveBatchedFheBools<Vec<Vec<u64>>>>::encrypt(&cks[1], c1_meet.as_slice());
-
-    let c2_free_enc = Encryptor::<_, NonInteractiveBatchedFheBools<Vec<Vec<u64>>>>::encrypt(&cks[2], c2_free.as_slice());
-    let c2_meet_enc = Encryptor::<_, NonInteractiveBatchedFheBools<Vec<Vec<u64>>>>::encrypt(&cks[2], c2_free.as_slice());
 
     let server_key_shares = cks
         .iter()
@@ -85,14 +83,6 @@ fn main() {
     let ct_c1_meet = (0..c1_meet_len).map(
         |i|
         FheBool { data: c1_meet_enc.key_switch(1).extract(i) }
-    ).collect_vec();
-    let _ct_c2_free = (0..c2_free_len).map(
-        |i|
-        FheBool { data: c2_free_enc.key_switch(2).extract(i) }
-    ).collect_vec();
-    let _ct_c2_meet = (0..c2_meet_len).map(
-        |i|
-        FheBool { data: c2_meet_enc.key_switch(2).extract(i) }
     ).collect_vec();
 
     let now = std::time::Instant::now();
