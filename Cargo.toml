@@ -1,0 +1,14 @@
+[package]
+name = "fhe-when2meet"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.11.4"
+itertools = "0.13.0"
+log = "0.4.22"
+phantom-zone = { git = "https://github.com/ed255/phantom-zone", branch = "feature/birthday-example", features = ["non_interactive_mp"]}
+rand = "0.8.5"
+threadpool = "1.8.1"
